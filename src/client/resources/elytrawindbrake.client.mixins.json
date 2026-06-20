@@ -1,0 +1,11 @@
+{
+	"required": true,
+	"package": "com.delamainsoftware.elytrawindbrake.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"LocalPlayerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

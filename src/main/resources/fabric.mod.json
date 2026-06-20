@@ -1,0 +1,25 @@
+{
+	"schemaVersion": 1,
+	"id": "elytrawindbrake",
+	"version": "${version}",
+	"name": "Elytra Wind Brake",
+	"description": "Slow down while flying with an Elytra by holding Shift",
+	"authors": [
+		"OrkaMC, icywhenhot"
+	],
+	"contact": {},
+	"license": "CC-BY-NC-SA 4.0",
+	"icon": "assets/elytrawindbrake/icon.png",
+	"environment": "client",
+	"mixins": [
+		{
+			"config": "elytrawindbrake.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.15.0",
+		"minecraft": ">=1.21 <=1.21.11",
+		"java": ">=21"
+	}
+}
