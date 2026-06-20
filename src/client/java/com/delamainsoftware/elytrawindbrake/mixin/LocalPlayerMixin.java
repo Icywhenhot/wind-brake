@@ -13,17 +13,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * bleed off horizontal speed each tick. Vertical motion is left untouched so
  * you keep gliding/descending normally — you just slow down.
  *
- * Everything referenced here is stable at the intermediary level across many
- * MC versions, which is what lets one jar span a wide version range:
+ * Minecraft 26.1+ ships UNOBFUSCATED, so this jar links directly against the real
+ * Mojang names below — there is no intermediary/remap layer anymore. One jar spans
+ * 26.1–26.2 simply because every member it touches keeps the same name and signature
+ * across those releases (verified against the 26.1.2 client jar):
  *   - LocalPlayer#tick           (the per-tick hook)
- *   - LivingEntity#isFallFlying  (gliding check)
+ *   - LivingEntity#isFallFlying  (gliding check — still this name in 26.x)
  *   - Entity#getDeltaMovement / #setDeltaMovement (velocity)
  *   - Options#keyShift           (the vanilla Sneak bind)
  *
- * PER-BRANCH NOTE: on 1.21.5+ the human-readable name of isFallFlying() became
- * isGliding(). The intermediary name (and therefore the compiled bytecode) is
- * identical, so a jar built here still runs on 1.21.5+. But if you create a
- * branch that *compiles* against 1.21.5+, rename the call below to isGliding().
+ * If a future MC release renames any of these, the mod won't crash — it just won't
+ * load on that version (its fabric.mod.json mc range and the missing symbol keep it
+ * out), so widen the range only after re-checking the names there.
  */
 @Mixin(LocalPlayer.class)
 public abstract class LocalPlayerMixin {
