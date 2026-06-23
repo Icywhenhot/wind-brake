@@ -3,7 +3,7 @@
 	"id": "elytrawindbrake",
 	"version": "${version}",
 	"name": "Elytra Wind Brake",
-	"description": "Slow down while flying with an Elytra by holding Shift",
+	"description": "Slow down while flying with an Elytra by holding Shift, and in Creative hold Jump to rocket straight up while keeping your speed",
 	"authors": [
 		"OrkaMC, icywhenhot"
 	],
