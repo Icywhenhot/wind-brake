@@ -3,14 +3,19 @@
 	"id": "elytrawindbrake",
 	"version": "${version}",
 	"name": "Elytra Wind Brake",
-	"description": "Slow down while flying with an Elytra by holding Shift, and in Creative hold Jump to rocket straight up while keeping your speed",
+	"description": "Slow down while flying with an Elytra by holding Shift and fly upward in Creative by holding Jump",
 	"authors": [
-		"OrkaMC, icywhenhot"
+		"OrkaMC, icywhenhot, Com3tt"
 	],
 	"contact": {},
 	"license": "CC-BY-NC-SA 4.0",
 	"icon": "assets/elytrawindbrake/icon.png",
-	"environment": "client",
+	"environment": "*",
+	"entrypoints": {
+		"modmenu": [
+			"com.delamainsoftware.elytrawindbrake.ModMenuIntegration"
+		]
+	},
 	"mixins": [
 		{
 			"config": "elytrawindbrake.client.mixins.json",
@@ -19,7 +24,10 @@
 	],
 	"depends": {
 		"fabricloader": ">=0.15.0",
-		"minecraft": ">=1.21 <=1.21.11",
+		"minecraft": ">=1.21 <=1.21.1",
 		"java": ">=21"
+	},
+	"suggests": {
+		"modmenu": "*"
 	}
 }

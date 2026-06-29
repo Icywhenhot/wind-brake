@@ -1,31 +1,38 @@
 package com.delamainsoftware.elytrawindbrake.mixin;
 
+import com.delamainsoftware.elytrawindbrake.ClimbingPlayer;
+import com.delamainsoftware.elytrawindbrake.config.WindBrakeConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Two elytra tweaks, both client-side and both applied at the end of the local
- * player's tick:
+ * player's tick. All numbers come from {@link WindBrakeConfig} (config/elytrawindbrake.json,
+ * editable in-game via Mod Menu).
  *
  *  1. Air-brake. While gliding with an elytra and holding the Sneak key, bleed
- *     off horizontal speed each tick. Vertical motion is left untouched so you
- *     keep gliding/descending normally — you just slow down.
+ *     off horizontal speed each tick. Vertical motion is left untouched.
  *
  *  2. Creative climb. While gliding with an elytra IN CREATIVE MODE and holding
- *     the Jump key, drive yourself straight up at a fixed rate without shedding
- *     horizontal momentum. This mirrors Bedrock's creative elytra flight: tap
- *     space and you rocket upward while keeping your speed.
+ *     the Jump key:
+ *       - nothing happens for the first {@code climbStartDelaySeconds} (the launch wind-up);
+ *       - then upward speed ramps up EXPONENTIALLY each tick, capped at {@code maxClimbSpeed};
+ *       - meanwhile a constant {@code forwardSpeed} is kept in the facing direction.
+ *     Constant forward + exponential up traces an exponential-curve trajectory.
+ *     Optionally the player is tilted to look straight up as it rockets away.
  *
- * Everything referenced here is stable at the intermediary level across many
- * MC versions, which is what lets one jar span a wide version range:
+ * Everything referenced here is stable at the intermediary level across many MC
+ * versions, which is what lets one jar span a wide version range:
  *   - LocalPlayer#tick           (the per-tick hook)
  *   - LivingEntity#isFallFlying  (gliding check)
  *   - Entity#getDeltaMovement / #setDeltaMovement (velocity)
+ *   - Entity#getYRot / #getXRot / #setXRot        (orientation)
  *   - Player#getAbilities + Abilities#instabuild  (creative-mode check)
  *   - Options#keyShift / #keyJump (the vanilla Sneak / Jump binds)
  *
@@ -35,56 +42,155 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * branch that *compiles* against 1.21.5+, rename the call below to isGliding().
  */
 @Mixin(LocalPlayer.class)
-public abstract class LocalPlayerMixin {
+public abstract class LocalPlayerMixin implements ClimbingPlayer {
 
-	// Horizontal velocity multiplier applied each tick while braking.
-	// ~8%/tick bleed: 0.92^20 ≈ 0.19, so ~80% of speed is gone after one second.
-	private static final double ELYTRAWINDBRAKE$BRAKE_FACTOR = 0.92D;
+    // How many consecutive ticks Jump has been held while gliding in creative.
+    // Resets to 0 the moment any of those conditions stops being true, so the
+    // launch delay restarts on every fresh press.
+    private int elytrawindbrake$jumpHeldTicks = 0;
 
-	// Upward velocity (blocks/tick) forced while holding Jump in creative.
-	// 1.0/tick = 20 blocks/s straight up — a brisk, Bedrock-like climb. We set
-	// (not add) this each tick so the ascent stays steady instead of running away.
-	private static final double ELYTRAWINDBRAKE$CREATIVE_CLIMB = 1.0D;
+    // Horizontal speed captured at the instant the arc begins, so the climb starts
+    // from your current momentum instead of jolting to a fixed value.
+    private double elytrawindbrake$climbBaseSpeed = 0.0D;
 
-	@Inject(method = "tick", at = @At("TAIL"))
-	private void elytrawindbrake$brakeWhileGliding(CallbackInfo ci) {
-		LocalPlayer self = (LocalPlayer) (Object) this;
+    // Heading (yaw) captured at the instant the arc begins. The whole climb follows
+    // this fixed direction so the mouse never steers it — that's what frees the camera.
+    private float elytrawindbrake$climbYaw = 0.0F;
 
-		// Only act while actively gliding with an elytra.
-		if (!self.isFallFlying()) {
-			return;
-		}
+    // Model-pose state read by the player renderer (NOT the camera). modelPitch is this
+    // tick's target body pitch (-arc angle); modelPitchPrev is last tick's, so the
+    // renderer can interpolate across partial ticks for a smooth tilt to vertical.
+    @Unique private boolean elytrawindbrake$climbing = false;
+    @Unique private float elytrawindbrake$modelPitch = 0.0F;
+    @Unique private float elytrawindbrake$modelPitchPrev = 0.0F;
+    // Counts ticks spent easing the model pose back to the camera after release.
+    @Unique private int elytrawindbrake$returnTicks = 0;
 
-		Minecraft mc = Minecraft.getInstance();
-		if (mc.options == null || !mc.options.keyShift.isDown()) {
-			return;
-		}
+    // How fast the model eases back to the live look on release (fraction closed per
+    // tick) and a hard stop so it can't chase a moving camera forever.
+    private static final float ELYTRAWINDBRAKE$MODEL_RETURN_FACTOR = 0.2F;
+    private static final int ELYTRAWINDBRAKE$MODEL_RETURN_MAX_TICKS = 60;
 
-		Vec3 v = self.getDeltaMovement();
-		self.setDeltaMovement(v.x * ELYTRAWINDBRAKE$BRAKE_FACTOR, v.y, v.z * ELYTRAWINDBRAKE$BRAKE_FACTOR);
-	}
+    @Override
+    public boolean elytrawindbrake$isClimbing() {
+        return elytrawindbrake$climbing;
+    }
 
-	@Inject(method = "tick", at = @At("TAIL"))
-	private void elytrawindbrake$creativeClimbWhileGliding(CallbackInfo ci) {
-		LocalPlayer self = (LocalPlayer) (Object) this;
+    @Override
+    public float elytrawindbrake$getModelPitch(float partialTick) {
+        return elytrawindbrake$modelPitchPrev
+                + (elytrawindbrake$modelPitch - elytrawindbrake$modelPitchPrev) * partialTick;
+    }
 
-		// Only while actively gliding with an elytra...
-		if (!self.isFallFlying()) {
-			return;
-		}
+    // After the climb ends, glide the model pose from wherever it was (often vertical)
+    // back to the player's real look pitch over a few ticks, then hand control back to
+    // vanilla. Without this the body snaps in a single tick, which reads as a jerk.
+    @Unique
+    private void elytrawindbrake$easeModelBack(float realPitch) {
+        if (!elytrawindbrake$climbing) {
+            return; // model already following the camera — nothing to ease
+        }
+        elytrawindbrake$modelPitchPrev = elytrawindbrake$modelPitch;
+        elytrawindbrake$modelPitch += (realPitch - elytrawindbrake$modelPitch) * ELYTRAWINDBRAKE$MODEL_RETURN_FACTOR;
+        if (Math.abs(realPitch - elytrawindbrake$modelPitch) <= 1.0F
+                || ++elytrawindbrake$returnTicks > ELYTRAWINDBRAKE$MODEL_RETURN_MAX_TICKS) {
+            elytrawindbrake$climbing = false;
+            elytrawindbrake$returnTicks = 0;
+        }
+    }
 
-		// ...and only in creative mode (instabuild is the creative-only flag).
-		if (!self.getAbilities().instabuild) {
-			return;
-		}
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void elytrawindbrake$brakeWhileGliding(CallbackInfo ci) {
+        WindBrakeConfig cfg = WindBrakeConfig.get();
+        if (!cfg.airBrakeEnabled) {
+            return;
+        }
 
-		Minecraft mc = Minecraft.getInstance();
-		if (mc.options == null || !mc.options.keyJump.isDown()) {
-			return;
-		}
+        LocalPlayer self = (LocalPlayer) (Object) this;
+        if (!self.isFallFlying()) {
+            return;
+        }
 
-		// Force a steady climb; leave x/z alone so horizontal speed is kept.
-		Vec3 v = self.getDeltaMovement();
-		self.setDeltaMovement(v.x, ELYTRAWINDBRAKE$CREATIVE_CLIMB, v.z);
-	}
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.options == null || !mc.options.keyShift.isDown()) {
+            return;
+        }
+
+        Vec3 v = self.getDeltaMovement();
+        self.setDeltaMovement(v.x * cfg.brakeFactor, v.y, v.z * cfg.brakeFactor);
+    }
+
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void elytrawindbrake$creativeClimbWhileGliding(CallbackInfo ci) {
+        WindBrakeConfig cfg = WindBrakeConfig.get();
+        LocalPlayer self = (LocalPlayer) (Object) this;
+        Minecraft mc = Minecraft.getInstance();
+
+        boolean active = cfg.creativeClimbEnabled
+                && self.isFallFlying()
+                && self.getAbilities().instabuild
+                && mc.options != null
+                && mc.options.keyJump.isDown();
+
+        if (!active) {
+            elytrawindbrake$jumpHeldTicks = 0;
+            elytrawindbrake$easeModelBack(self.getXRot());
+            return;
+        }
+
+        elytrawindbrake$jumpHeldTicks++;
+
+        // Launch wind-up: hold for climbStartDelaySeconds before anything happens.
+        int delayTicks = (int) Math.round(cfg.climbStartDelaySeconds * 20.0D);
+        if (elytrawindbrake$jumpHeldTicks <= delayTicks) {
+            elytrawindbrake$easeModelBack(self.getXRot());
+            return;
+        }
+
+        // climbTicks starts at 0 on the first tick past the delay.
+        int climbTicks = elytrawindbrake$jumpHeldTicks - delayTicks - 1;
+
+        // On the very first climb tick, lock in the heading and seed the speed from
+        // current momentum. From here the climb runs on its own fixed line, so the
+        // mouse is free to look anywhere without steering it or fighting the camera.
+        if (climbTicks == 0) {
+            Vec3 cur = self.getDeltaMovement();
+            double horiz = Math.sqrt(cur.x * cur.x + cur.z * cur.z);
+            elytrawindbrake$climbBaseSpeed = Math.max(cfg.forwardSpeed, horiz);
+            elytrawindbrake$climbYaw = self.getYRot();
+        }
+
+        // Total speed ramps up exponentially each tick, capped so it stays sane.
+        double speed = elytrawindbrake$climbBaseSpeed * Math.pow(cfg.climbAcceleration, climbTicks);
+        if (speed > cfg.maxClimbSpeed) {
+            speed = cfg.maxClimbSpeed;
+        }
+
+        // Climb angle sweeps 0 deg -> 90 deg along an exponential-approach curve:
+        // starts horizontal, curves up, and asymptotes to straight-up. tau is set so
+        // it's ~95% of the way vertical after secondsToVertical.
+        double tau = Math.max(1.0D, cfg.secondsToVertical * 20.0D / 3.0D);
+        double frac = 1.0D - Math.exp(-climbTicks / tau);
+        double thetaDeg = 90.0D * frac;
+        double thetaRad = Math.toRadians(thetaDeg);
+
+        // Split the speed along that angle: shrinking horizontal, growing vertical.
+        // Direction uses the LOCKED heading, not the live look, so the mouse can't steer.
+        double horizSpeed = speed * Math.cos(thetaRad);
+        double vy = speed * Math.sin(thetaRad);
+
+        double yaw = Math.toRadians(elytrawindbrake$climbYaw);
+        double vx = -Math.sin(yaw) * horizSpeed;
+        double vz = Math.cos(yaw) * horizSpeed;
+        self.setDeltaMovement(vx, vy, vz);
+
+        // Tilt the rendered MODEL along the arc (pitch -arc angle, matching getViewXRot's
+        // convention where -90 = straight up). The renderer reads this; the camera/look
+        // stays untouched, so the mouse remains fully free in every view including F5.
+        float newPitch = (float) -thetaDeg;
+        elytrawindbrake$modelPitchPrev = (climbTicks == 0) ? newPitch : elytrawindbrake$modelPitch;
+        elytrawindbrake$modelPitch = newPitch;
+        elytrawindbrake$climbing = true;
+        elytrawindbrake$returnTicks = 0;
+    }
 }
