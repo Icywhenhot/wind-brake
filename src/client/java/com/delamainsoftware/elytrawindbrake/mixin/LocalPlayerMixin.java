@@ -27,8 +27,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *     Constant forward + exponential up traces an exponential-curve trajectory.
  *     Optionally the player is tilted to look straight up as it rockets away.
  *
- * Everything referenced here is stable at the intermediary level across many MC
- * versions, which is what lets one jar span a wide version range:
+ * This is the 1.21.2 branch: the jar is compiled against 1.21.2 and verified to run
+ * unchanged on 1.21.2 through 1.21.8. Everything referenced here is stable at the
+ * intermediary level across that whole window (and well beyond), which is what lets one
+ * jar span the range:
  *   - LocalPlayer#tick           (the per-tick hook)
  *   - LivingEntity#isFallFlying  (gliding check)
  *   - Entity#getDeltaMovement / #setDeltaMovement (velocity)
