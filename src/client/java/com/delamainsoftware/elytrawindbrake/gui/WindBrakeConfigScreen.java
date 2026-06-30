@@ -84,9 +84,15 @@ public class WindBrakeConfigScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(g, mouseX, mouseY, partialTick);
+        // Don't call renderBackground() here: since the 1.21.6+ GuiRenderState pipeline the
+        // framework (Screen.renderWithTooltipAndSubtitles) already draws the background — and
+        // its blur may only run once per frame (GuiRenderState#blurBeforeThisStratum throws
+        // "Can only blur once per frame"), so a second call here hard-crashes the client.
+        // super.render() draws just the widgets; the title goes on top.
         super.render(g, mouseX, mouseY, partialTick);
-        g.drawCenteredString(this.font, this.title, this.width / 2, 16, 0xFFFFFF);
+        // Color is ARGB: 0xFFFFFF has alpha 0, and drawString now skips fully-transparent
+        // text, so the title would be invisible. Use 0xFFFFFFFF (opaque white).
+        g.drawCenteredString(this.font, this.title, this.width / 2, 16, 0xFFFFFFFF);
     }
 
     /** Generic slider that maps the 0..1 handle onto an arbitrary [min, max] range. */

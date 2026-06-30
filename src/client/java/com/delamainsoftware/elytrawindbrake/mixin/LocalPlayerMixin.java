@@ -27,10 +27,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *     Constant forward + exponential up traces an exponential-curve trajectory.
  *     Optionally the player is tilted to look straight up as it rockets away.
  *
- * This is the 1.21.2 branch: the jar is compiled against 1.21.2 and verified to run
- * unchanged on 1.21.2 through 1.21.8. Everything referenced here is stable at the
- * intermediary level across that whole window (and well beyond), which is what lets one
- * jar span the range:
+ * This is the 1.21.9 branch: the jar is compiled against 1.21.9 and verified to run
+ * unchanged on 1.21.9 through 1.21.11 (the AvatarRenderer rendering generation).
+ * Everything referenced here is stable at the intermediary level across that whole window
+ * (and well beyond), which is what lets one jar span the range:
  *   - LocalPlayer#tick           (the per-tick hook)
  *   - LivingEntity#isFallFlying  (gliding check)
  *   - Entity#getDeltaMovement / #setDeltaMovement (velocity)
@@ -38,10 +38,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *   - Player#getAbilities + Abilities#instabuild  (creative-mode check)
  *   - Options#keyShift / #keyJump (the vanilla Sneak / Jump binds)
  *
- * PER-BRANCH NOTE: on 1.21.5+ the human-readable name of isFallFlying() became
- * isGliding(). The intermediary name (and therefore the compiled bytecode) is
- * identical, so a jar built here still runs on 1.21.5+. But if you create a
- * branch that *compiles* against 1.21.5+, rename the call below to isGliding().
+ * PER-BRANCH NOTE: as of 1.21.9 the gliding check is still {@code isFallFlying()}
+ * (its intermediary name has been stable for years), so the call below is unchanged.
+ * The render-side rename was the breaking change for this branch: PlayerRenderer ->
+ * AvatarRenderer and PlayerRenderState -> AvatarRenderState (see AvatarRendererMixin).
  */
 @Mixin(LocalPlayer.class)
 public abstract class LocalPlayerMixin implements ClimbingPlayer {

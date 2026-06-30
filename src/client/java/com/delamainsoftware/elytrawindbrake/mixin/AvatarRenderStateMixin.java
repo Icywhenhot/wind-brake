@@ -1,18 +1,21 @@
 package com.delamainsoftware.elytrawindbrake.mixin;
 
 import com.delamainsoftware.elytrawindbrake.ClimbingRenderState;
-import net.minecraft.client.renderer.entity.state.PlayerRenderState;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 /**
- * Adds two transient fields to the player render state so the climb pose can ride along
- * with the rest of the per-frame snapshot. {@link PlayerRendererMixin} fills them in
+ * Adds two transient fields to the avatar render state so the climb pose can ride along
+ * with the rest of the per-frame snapshot. {@link AvatarRendererMixin} fills them in
  * during extraction and reads them back while posing the body. Nothing here references
  * the entity, so it stays a pure data carrier.
+ *
+ * (1.21.9 renamed PlayerRenderState -> AvatarRenderState as part of the AvatarRenderer
+ * refactor; the field this carries alongside, {@code xRot}, kept its name.)
  */
-@Mixin(PlayerRenderState.class)
-public abstract class PlayerRenderStateMixin implements ClimbingRenderState {
+@Mixin(AvatarRenderState.class)
+public abstract class AvatarRenderStateMixin implements ClimbingRenderState {
 
     @Unique private boolean elytrawindbrake$climbing = false;
     @Unique private float elytrawindbrake$modelPitch = 0.0F;

@@ -4,8 +4,8 @@
 	"compatibilityLevel": "JAVA_21",
 	"client": [
 		"LocalPlayerMixin",
-		"PlayerRendererMixin",
-		"PlayerRenderStateMixin"
+		"AvatarRendererMixin",
+		"AvatarRenderStateMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
