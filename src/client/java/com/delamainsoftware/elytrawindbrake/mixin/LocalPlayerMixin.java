@@ -27,19 +27,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *     Constant forward + exponential up traces an exponential-curve trajectory.
  *     Optionally the player is tilted to look straight up as it rockets away.
  *
- * Everything referenced here is stable at the intermediary level across many MC
- * versions, which is what lets one jar span a wide version range:
+ * This is the 1.20 branch: the jar is compiled against 1.20 (Java 17 bytecode) and verified
+ * to run unchanged on 1.20 through 1.21.1. Everything referenced here is stable at the
+ * intermediary level across that whole window, which is what lets one jar span it:
  *   - LocalPlayer#tick           (the per-tick hook)
  *   - LivingEntity#isFallFlying  (gliding check)
  *   - Entity#getDeltaMovement / #setDeltaMovement (velocity)
- *   - Entity#getYRot / #getXRot / #setXRot        (orientation)
+ *   - Entity#getYRot / #getXRot                   (orientation)
  *   - Player#getAbilities + Abilities#instabuild  (creative-mode check)
  *   - Options#keyShift / #keyJump (the vanilla Sneak / Jump binds)
  *
- * PER-BRANCH NOTE: on 1.21.5+ the human-readable name of isFallFlying() became
- * isGliding(). The intermediary name (and therefore the compiled bytecode) is
- * identical, so a jar built here still runs on 1.21.5+. But if you create a
- * branch that *compiles* against 1.21.5+, rename the call below to isGliding().
+ * The range stops at 1.21.1 because the player renderer was rewritten to render-states in
+ * 1.21.2 (see PlayerRendererMixin), so the model-tilt hook no longer applies there.
  */
 @Mixin(LocalPlayer.class)
 public abstract class LocalPlayerMixin implements ClimbingPlayer {

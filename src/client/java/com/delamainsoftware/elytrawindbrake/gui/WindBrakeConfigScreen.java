@@ -84,9 +84,15 @@ public class WindBrakeConfigScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(g, mouseX, mouseY, partialTick);
+        // Dim the world behind with a translucent fill instead of Screen#renderBackground:
+        // that method's signature changed across this jar's version range (1-arg in 1.20/1.20.1,
+        // 4-arg from 1.20.2), which would crash on the versions it wasn't compiled against.
+        // fill(int,int,int,int,int) has been stable forever, so one call works everywhere.
+        g.fill(0, 0, this.width, this.height, 0xC0101010);
         super.render(g, mouseX, mouseY, partialTick);
-        g.drawCenteredString(this.font, this.title, this.width / 2, 16, 0xFFFFFF);
+        // Color is ARGB: 0xFFFFFF has alpha 0 and transparent text is skipped on newer
+        // versions, so the title would be invisible. Use 0xFFFFFFFF (opaque white).
+        g.drawCenteredString(this.font, this.title, this.width / 2, 16, 0xFFFFFFFF);
     }
 
     /** Generic slider that maps the 0..1 handle onto an arbitrary [min, max] range. */
