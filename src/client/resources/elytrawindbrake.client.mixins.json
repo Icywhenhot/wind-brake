@@ -3,7 +3,9 @@
 	"package": "com.delamainsoftware.elytrawindbrake.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
-		"LocalPlayerMixin"
+		"LocalPlayerMixin",
+		"AvatarRendererMixin",
+		"AvatarRenderStateMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

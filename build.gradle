@@ -12,6 +12,9 @@ repositories {
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
+
+	// Mod Menu — used only for the optional config-screen integration.
+	maven { url = "https://maven.terraformersmc.com/releases" }
 }
 
 loom {
@@ -37,6 +40,20 @@ dependencies {
 
 	// No Fabric API on purpose: depending only on fabric-loader keeps the jar's
 	// version range as wide as possible (Fabric API bumps per MC version).
+
+	// Mod Menu is an OPTIONAL integration: we compile against its API so the config screen
+	// can register, but the core mod never references it outside the entrypoint class, so it
+	// stays unloaded when Mod Menu isn't installed. compileOnly means it is NOT bundled and
+	// NOT a published/hard dependency (it's listed under "suggests" in fabric.mod.json).
+	// 26.x is unobfuscated, so the mod is consumed as-is — no `modImplementation`/remap.
+	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+	// DEV RUNTIME ONLY — load Mod Menu + Fabric API in runClient so the config screen can be
+	// tested in-game (Mod Menu needs several Fabric API modules). loom's `localRuntime` never
+	// leaks into the published jar or its metadata, so the shipped mod still hard-depends only
+	// on fabric-loader. (Unobfuscated 26.x => plain localRuntime, not modLocalRuntime/remap.)
+	localRuntime "com.terraformersmc:modmenu:${project.modmenu_version}"
+	localRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 }
 
 processResources {
