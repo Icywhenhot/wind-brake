@@ -84,11 +84,12 @@ public class WindBrakeConfigScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        // Dim the world behind with a translucent fill instead of Screen#renderBackground:
-        // that method's signature changed across this jar's version range (1-arg in 1.20/1.20.1,
-        // 4-arg from 1.20.2), which would crash on the versions it wasn't compiled against.
-        // fill(int,int,int,int,int) has been stable forever, so one call works everywhere.
-        g.fill(0, 0, this.width, this.height, 0xC0101010);
+        // Draw the normal menu background: the tiled dirt texture on the main-menu screens
+        // and a dimmed view of the world when opened in-game. (This branch is pinned to
+        // 1.20/1.20.1, where renderBackground is the 1-arg GuiGraphics overload, so it's safe
+        // to call directly — the flat grey fill this replaced was only there to dodge the
+        // signature change introduced in 1.20.2, which no longer applies.)
+        this.renderBackground(g);
         super.render(g, mouseX, mouseY, partialTick);
         // Color is ARGB: 0xFFFFFF has alpha 0 and transparent text is skipped on newer
         // versions, so the title would be invisible. Use 0xFFFFFFFF (opaque white).
