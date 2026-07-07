@@ -85,7 +85,7 @@ public class WindBrakeConfigScreen extends Screen {
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         // Draw the normal menu background: the tiled dirt texture on the main-menu screens
-        // and a dimmed view of the world when opened in-game. (This branch targets 1.20.2–1.20.4,
+        // and a dimmed view of the world when opened in-game. (This branch targets 1.20.5–1.21.1,
         // where renderBackground is the 4-arg overload; it's stable across that whole range, so
         // calling it directly is safe. The flat grey fill this replaced was only ever there to
         // dodge this exact 1-arg vs 4-arg signature difference.)

@@ -1,10 +1,11 @@
 package com.delamainsoftware.elytrawindbrake;
 
 import com.delamainsoftware.elytrawindbrake.net.WindBrakeNetworking;
+import com.delamainsoftware.elytrawindbrake.net.WindBrakeNetworking.CheckPayload;
+import com.delamainsoftware.elytrawindbrake.net.WindBrakeNetworking.PresentPayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 
 /**
  * Client side of the handshake. On every connection the mod starts LOCKED and asks the
@@ -14,16 +15,19 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 public class WindBrakeClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        // Server confirmed it has the mod -> unlock. Flip the flag on the client thread.
-        ClientPlayNetworking.registerGlobalReceiver(WindBrakeNetworking.PRESENT,
-                (client, handler, buf, responseSender) ->
-                        client.execute(() -> WindBrakeNetworking.setServerHasMod(true)));
+        // Server confirmed it has the mod -> unlock. Payload receivers run on the client thread.
+        ClientPlayNetworking.registerGlobalReceiver(PresentPayload.TYPE, (payload, context) ->
+                WindBrakeNetworking.setServerHasMod(true));
 
-        // Fresh connection: assume no mod on the server, then ping to ask. A vanilla server
-        // never answers, so the features stay off there.
+        // Fresh connection: assume no mod on the server, then ask — but only if the server
+        // actually declared the CHECK channel (i.e. it has the mod). canSend guards against
+        // the new API throwing when sending an unknown payload to a vanilla server; such a
+        // server never registered the channel, so we simply never ask and stay locked.
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             WindBrakeNetworking.setServerHasMod(false);
-            sender.sendPacket(WindBrakeNetworking.CHECK, PacketByteBufs.empty());
+            if (ClientPlayNetworking.canSend(CheckPayload.TYPE)) {
+                ClientPlayNetworking.send(CheckPayload.INSTANCE);
+            }
         });
 
         // Disconnect: relock, so a previous "enabled" server can't leak into the next one.
