@@ -84,9 +84,13 @@ public class WindBrakeConfigScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        // renderBackground draws the normal menu background (dirt/panorama on the menus,
+        // dimmed world in-game). The 4-arg overload is stable across this jar's 1.21.2–1.21.8 range.
         this.renderBackground(g, mouseX, mouseY, partialTick);
         super.render(g, mouseX, mouseY, partialTick);
-        g.drawCenteredString(this.font, this.title, this.width / 2, 16, 0xFFFFFF);
+        // Color is ARGB and MUST be opaque: 0xFFFFFF has alpha 0, and modern versions skip
+        // fully-transparent text, so the title would be invisible. 0xFFFFFFFF = opaque white.
+        g.drawCenteredString(this.font, this.title, this.width / 2, 16, 0xFFFFFFFF);
     }
 
     /** Generic slider that maps the 0..1 handle onto an arbitrary [min, max] range. */
