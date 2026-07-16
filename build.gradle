@@ -36,7 +36,7 @@ dependencies {
 
 	// Fabric API is a HARD dependency: the server-presence handshake uses its networking
 	// module (Client/ServerPlayNetworking + the CustomPayload PayloadTypeRegistry). All MC
-	// versions this jar targets (1.21.2–1.21.8) share that same networking API.
+	// versions this jar targets (1.21.6–1.21.8) share that same networking API.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	// Mod Menu is an OPTIONAL integration: we compile against its API so the config

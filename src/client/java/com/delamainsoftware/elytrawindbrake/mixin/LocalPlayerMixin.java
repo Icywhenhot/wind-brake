@@ -28,21 +28,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *     Constant forward + exponential up traces an exponential-curve trajectory.
  *     Optionally the player is tilted to look straight up as it rockets away.
  *
- * This is the 1.21.2 branch: the jar is compiled against 1.21.2 and verified to run
- * unchanged on 1.21.2 through 1.21.8. Everything referenced here is stable at the
+ * This is the 1.21.6 branch: the jar is compiled against 1.21.6 and verified to run
+ * unchanged on 1.21.6 through 1.21.8. Everything referenced here is stable at the
  * intermediary level across that whole window (and well beyond), which is what lets one
  * jar span the range:
- *   - LocalPlayer#tick           (the per-tick hook)
- *   - LivingEntity#isFallFlying  (gliding check)
+ *   - LocalPlayer#tick             (the per-tick hook)
+ *   - LivingEntity#isFallFlying    (gliding check)
  *   - Entity#getDeltaMovement / #setDeltaMovement (velocity)
  *   - Entity#getYRot / #getXRot / #setXRot        (orientation)
  *   - Player#getAbilities + Abilities#instabuild  (creative-mode check)
  *   - Options#keyShift / #keyJump (the vanilla Sneak / Jump binds)
  *
- * PER-BRANCH NOTE: on 1.21.5+ the human-readable name of isFallFlying() became
- * isGliding(). The intermediary name (and therefore the compiled bytecode) is
- * identical, so a jar built here still runs on 1.21.5+. But if you create a
- * branch that *compiles* against 1.21.5+, rename the call below to isGliding().
+ * MAPPING NOTE: the gliding check is still isFallFlying() at 1.21.6 — verified against
+ * the Mojmap-named client jar (LivingEntity#isFallFlying()V). Despite the in-game
+ * mechanic being renamed to "gliding", the Mojang method name did NOT become
+ * isGliding() at 1.21.5–1.21.8; do not rename it or the build breaks.
  */
 @Mixin(LocalPlayer.class)
 public abstract class LocalPlayerMixin implements ClimbingPlayer {

@@ -84,9 +84,11 @@ public class WindBrakeConfigScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        // renderBackground draws the normal menu background (dirt/panorama on the menus,
-        // dimmed world in-game). The 4-arg overload is stable across this jar's 1.21.2–1.21.8 range.
-        this.renderBackground(g, mouseX, mouseY, partialTick);
+        // Do NOT call renderBackground() here. On 1.21.6+ Screen.renderWithTooltip already
+        // draws the (blurred) background BEFORE calling render(), and GuiGraphics permits the
+        // blur only once per frame — a second call throws "Can only blur once per frame" and
+        // crashes the screen. (Pre-1.21.6 the subclass had to draw it; that contract flipped.)
+        // super.render() just draws our widgets on top of the background already rendered.
         super.render(g, mouseX, mouseY, partialTick);
         // Color is ARGB and MUST be opaque: 0xFFFFFF has alpha 0, and modern versions skip
         // fully-transparent text, so the title would be invisible. 0xFFFFFFFF = opaque white.

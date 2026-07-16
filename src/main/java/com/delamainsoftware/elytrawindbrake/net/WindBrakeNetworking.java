@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceLocation;
  *   - a server that has this mod answers with {@link PresentPayload} (a vanilla server can't,
  *     so it never does), and only that answer flips {@link #serverHasMod} on.
  *
- * This branch targets 1.21.2–1.21.8, which use Minecraft's {@code CustomPacketPayload}
+ * This branch targets 1.21.6–1.21.8, which use Minecraft's {@code CustomPacketPayload}
  * codec networking. Both payloads are empty — their mere arrival is the entire message —
  * so each uses {@link StreamCodec#unit}.
  *
