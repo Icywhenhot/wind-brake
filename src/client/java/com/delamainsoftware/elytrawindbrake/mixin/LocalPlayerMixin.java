@@ -28,10 +28,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *     Constant forward + exponential up traces an exponential-curve trajectory.
  *     Optionally the player is tilted to look straight up as it rockets away.
  *
- * This is the 1.21.9 branch: the jar is compiled against 1.21.9 and verified to run
- * unchanged on 1.21.9 through 1.21.11 (the AvatarRenderer rendering generation).
- * Everything referenced here is stable at the intermediary level across that whole window
- * (and well beyond), which is what lets one jar span the range:
+ * This is the 1.21.11 branch: the jar is compiled against 1.21.11 and targets that release
+ * ONLY. The gameplay members below are stable at the intermediary level across the whole
+ * 1.21.9–1.21.11 window:
  *   - LocalPlayer#tick           (the per-tick hook)
  *   - LivingEntity#isFallFlying  (gliding check)
  *   - Entity#getDeltaMovement / #setDeltaMovement (velocity)
@@ -39,10 +38,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *   - Player#getAbilities + Abilities#instabuild  (creative-mode check)
  *   - Options#keyShift / #keyJump (the vanilla Sneak / Jump binds)
  *
- * PER-BRANCH NOTE: as of 1.21.9 the gliding check is still {@code isFallFlying()}
- * (its intermediary name has been stable for years), so the call below is unchanged.
- * The render-side rename was the breaking change for this branch: PlayerRenderer ->
- * AvatarRenderer and PlayerRenderState -> AvatarRenderState (see AvatarRendererMixin).
+ * ...but the jar as a whole does NOT span that window: MC renamed {@code ResourceLocation}
+ * ->{@code Identifier} (used by the networking handshake) and the CycleButton builder's
+ * intermediary id drifted (method_32613 -> method_32614) between 1.21.9 and 1.21.11, so the
+ * config screen + handshake force a per-release build. The render-side rename PlayerRenderer
+ * -> AvatarRenderer / PlayerRenderState -> AvatarRenderState is shared across 1.21.9–1.21.11
+ * (see AvatarRendererMixin).
  */
 @Mixin(LocalPlayer.class)
 public abstract class LocalPlayerMixin implements ClimbingPlayer {

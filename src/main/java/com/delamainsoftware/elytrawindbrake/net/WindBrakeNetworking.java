@@ -3,7 +3,7 @@ package com.delamainsoftware.elytrawindbrake.net;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Shared handshake payloads + the one flag that gates every feature.
@@ -14,9 +14,11 @@ import net.minecraft.resources.ResourceLocation;
  *   - a server that has this mod answers with {@link PresentPayload} (a vanilla server can't,
  *     so it never does), and only that answer flips {@link #serverHasMod} on.
  *
- * This branch targets 1.21.9–1.21.11, which use Minecraft's {@code CustomPacketPayload}
- * codec networking. Both payloads are empty — their mere arrival is the entire message —
- * so each uses {@link StreamCodec#unit}.
+ * This branch targets 1.21.11 ONLY (compiled against it). It uses Minecraft's
+ * {@code CustomPacketPayload} codec networking; both payloads are empty — their mere arrival
+ * is the entire message — so each uses {@link StreamCodec#unit}. NOTE: a jar does NOT span
+ * 1.21.9–1.21.11 — MC renamed {@code ResourceLocation}→{@code Identifier} and the CycleButton
+ * builder's intermediary id drifted within that window, so each release needs its own build.
  *
  * Lives in the {@code main} source set so both the server initializer (main) and the
  * client initializer/mixin (client) can reference it — the client source set sees main.
@@ -50,10 +52,11 @@ public final class WindBrakeNetworking {
         }
     }
 
-    // ResourceLocation's constructors are private on this range (1.21+), so build IDs via
-    // tryParse(String), which is stable across the whole 1.21.9–1.21.11 window.
-    private static ResourceLocation id(String path) {
-        return ResourceLocation.tryParse("elytrawindbrake:" + path);
+    // Identifier's constructors are private, so build IDs via tryParse(String). NOTE: MC renamed
+    // ResourceLocation -> Identifier between 1.21.9 and 1.21.11, so this branch (compiled against
+    // 1.21.11) uses Identifier — a 1.21.9-compiled jar will NOT run on 1.21.11.
+    private static Identifier id(String path) {
+        return Identifier.tryParse("elytrawindbrake:" + path);
     }
 
     // Written on the client's network/tick thread (packet receive / connection events), read on
