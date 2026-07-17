@@ -2,6 +2,7 @@ package com.delamainsoftware.elytrawindbrake.mixin;
 
 import com.delamainsoftware.elytrawindbrake.ClimbingPlayer;
 import com.delamainsoftware.elytrawindbrake.config.WindBrakeConfig;
+import com.delamainsoftware.elytrawindbrake.net.WindBrakeNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.phys.Vec3;
@@ -103,6 +104,10 @@ public abstract class LocalPlayerMixin implements ClimbingPlayer {
 
     @Inject(method = "tick", at = @At("TAIL"))
     private void elytrawindbrake$brakeWhileGliding(CallbackInfo ci) {
+        // Locked unless the server confirmed it has the mod (see WindBrakeClient handshake).
+        if (!WindBrakeNetworking.serverHasMod()) {
+            return;
+        }
         WindBrakeConfig cfg = WindBrakeConfig.get();
         if (!cfg.airBrakeEnabled) {
             return;
@@ -124,6 +129,10 @@ public abstract class LocalPlayerMixin implements ClimbingPlayer {
 
     @Inject(method = "tick", at = @At("TAIL"))
     private void elytrawindbrake$creativeClimbWhileGliding(CallbackInfo ci) {
+        // Locked unless the server confirmed it has the mod (see WindBrakeClient handshake).
+        if (!WindBrakeNetworking.serverHasMod()) {
+            return;
+        }
         WindBrakeConfig cfg = WindBrakeConfig.get();
         LocalPlayer self = (LocalPlayer) (Object) this;
         Minecraft mc = Minecraft.getInstance();
