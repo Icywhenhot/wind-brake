@@ -12,6 +12,12 @@
 	"icon": "assets/elytrawindbrake/icon.png",
 	"environment": "*",
 	"entrypoints": {
+		"main": [
+			"com.delamainsoftware.elytrawindbrake.WindBrakeServer"
+		],
+		"client": [
+			"com.delamainsoftware.elytrawindbrake.WindBrakeClient"
+		],
 		"modmenu": [
 			"com.delamainsoftware.elytrawindbrake.ModMenuIntegration"
 		]
@@ -24,6 +30,7 @@
 	],
 	"depends": {
 		"fabricloader": ">=0.15.0",
+		"fabric-api": "*",
 		"minecraft": ">=26.1 <=26.2",
 		"java": ">=25"
 	},

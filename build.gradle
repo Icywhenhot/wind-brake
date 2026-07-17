@@ -38,22 +38,27 @@ dependencies {
 	// stable Mojang names directly — which is exactly what makes one jar span 26.1–26.2.
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	// No Fabric API on purpose: depending only on fabric-loader keeps the jar's
-	// version range as wide as possible (Fabric API bumps per MC version).
+	// Fabric API is now a HARD dependency: the server-presence handshake uses its networking
+	// module (Client/ServerPlayNetworking + the CustomPayload PayloadTypeRegistry). 26.x is
+	// unobfuscated, so there's no remap and Loom doesn't register `modImplementation` — plain
+	// `implementation` is used and Fabric API's Gradle module metadata pulls the sub-modules
+	// (fabric-networking-api-v1, …) onto the compile classpath transitively. It is declared
+	// `"fabric-api": "*"` in fabric.mod.json so a user's per-MC-version Fabric API build satisfies
+	// it across 26.1–26.2. Deliberate trade of the old "no Fabric API, widest range" stance for
+	// the server gate — the jar now requires Fabric API installed.
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	// Mod Menu is an OPTIONAL integration: we compile against its API so the config screen
 	// can register, but the core mod never references it outside the entrypoint class, so it
 	// stays unloaded when Mod Menu isn't installed. compileOnly means it is NOT bundled and
 	// NOT a published/hard dependency (it's listed under "suggests" in fabric.mod.json).
-	// 26.x is unobfuscated, so the mod is consumed as-is — no `modImplementation`/remap.
+	// 26.x is unobfuscated, so Mod Menu is consumed as-is — no `modImplementation`/remap.
 	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
 
-	// DEV RUNTIME ONLY — load Mod Menu + Fabric API in runClient so the config screen can be
-	// tested in-game (Mod Menu needs several Fabric API modules). loom's `localRuntime` never
-	// leaks into the published jar or its metadata, so the shipped mod still hard-depends only
-	// on fabric-loader. (Unobfuscated 26.x => plain localRuntime, not modLocalRuntime/remap.)
+	// DEV RUNTIME ONLY — load Mod Menu in runClient so the config screen can be tested in-game.
+	// loom's `localRuntime` never leaks into the published jar or its metadata. (Fabric API is
+	// already on the dev runtime via the modImplementation above.)
 	localRuntime "com.terraformersmc:modmenu:${project.modmenu_version}"
-	localRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 }
 
 processResources {
