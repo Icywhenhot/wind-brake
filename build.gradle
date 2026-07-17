@@ -34,19 +34,15 @@ dependencies {
 	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	// No Fabric API on purpose: depending only on fabric-loader keeps the jar's
-	// version range as wide as possible (Fabric API bumps per MC version).
+	// Fabric API is a HARD dependency: the server-presence handshake uses its networking
+	// module (Client/ServerPlayNetworking + the CustomPayload PayloadTypeRegistry). All MC
+	// versions this jar targets (1.21.9–1.21.11) share that same networking API.
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	// Mod Menu is an OPTIONAL integration: we compile against its API so the config
 	// screen can register, but the core mod never references it outside the entrypoint
-	// class, so it stays unloaded when Mod Menu isn't installed. modmenu pulls Fabric
-	// API into the dev runtime only — it is not bundled and is not a hard dependency.
+	// class, so it stays unloaded when Mod Menu isn't installed.
 	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
-
-	// Fabric API in the DEV RUNTIME ONLY — Mod Menu needs several of its modules to
-	// load while testing. modLocalRuntime never leaks into the published jar or its
-	// dependency metadata, so the shipped mod still hard-depends only on fabric-loader.
-	modLocalRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 }
 
 processResources {
