@@ -31,17 +31,17 @@ public class WindBrakeConfig {
     // not an L. Total speed ramps up exponentially the whole time, up to a cap.
     public boolean creativeClimbEnabled = true;
     /** Seconds to wait after pressing Jump before the climb actually starts. */
-    public double climbStartDelaySeconds = 1.0D;
+    public double climbStartDelaySeconds = 0.25D;
     /** Horizontal speed (blocks/tick) the arc starts at — the cruise speed before
      *  it tips upward. Your current glide speed is used instead if it's faster. */
-    public double forwardSpeed = 0.5D;
+    public double forwardSpeed = 0.15D;
     /** How long (seconds) the arc takes to become (nearly) vertical. Smaller = the
      *  curve whips up faster; larger = a long, lazy arc. */
     public double secondsToVertical = 5.0D;
     /** Exponential growth of total speed per tick while held (>1). */
-    public double climbAcceleration = 1.04D;
+    public double climbAcceleration = 1.05D;
     /** Hard cap on total speed (blocks/tick) so it never gets TOO fast. */
-    public double maxClimbSpeed = 1.5D;
+    public double maxClimbSpeed = 1.4D;
 
     // ---------------------------------------------------------------------------
 
