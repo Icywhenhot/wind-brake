@@ -35,17 +35,17 @@ dependencies {
 	// no Yarn, and an empty Fabric intermediary. The `net.fabricmc.fabric-loom`
 	// plugin (not `-remap`) consumes the game jar as-is, so there's no `mappings`
 	// dependency and nothing gets remapped. The jar we produce references the real,
-	// stable Mojang names directly — which is exactly what makes one jar span 26.1–26.2.
+	// stable Mojang names of 26.2 directly. This branch is pinned to 26.2 only.
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	// Fabric API is now a HARD dependency: the server-presence handshake uses its networking
+	// Fabric API is a HARD dependency: the server-presence handshake uses its networking
 	// module (Client/ServerPlayNetworking + the CustomPayload PayloadTypeRegistry). 26.x is
 	// unobfuscated, so there's no remap and Loom doesn't register `modImplementation` — plain
 	// `implementation` is used and Fabric API's Gradle module metadata pulls the sub-modules
 	// (fabric-networking-api-v1, …) onto the compile classpath transitively. It is declared
-	// `"fabric-api": "*"` in fabric.mod.json so a user's per-MC-version Fabric API build satisfies
-	// it across 26.1–26.2. Deliberate trade of the old "no Fabric API, widest range" stance for
-	// the server gate — the jar now requires Fabric API installed.
+	// `"fabric-api": "*"` in fabric.mod.json so the user's 26.2 Fabric API build satisfies it.
+	// Deliberate trade of the old "no Fabric API, widest range" stance for the server gate —
+	// the jar now requires Fabric API installed.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	// Mod Menu is an OPTIONAL integration: we compile against its API so the config screen

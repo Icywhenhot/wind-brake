@@ -29,9 +29,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *     Optionally the player is tilted to look straight up as it rockets away.
  *
  * Minecraft 26.1+ ships UNOBFUSCATED, so this jar links directly against the real Mojang
- * names below — there is no intermediary/remap layer anymore. One jar spans 26.1–26.2
- * because every member it touches keeps the same name and signature across those releases
- * (verified against the 26.1–26.2 client jars):
+ * names below — there is no intermediary/remap layer anymore. This branch is built against
+ * 26.2 only; every member it touches (verified against the 26.2 client jar):
  *   - LocalPlayer#tick                           (the per-tick hook)
  *   - LivingEntity#isFallFlying                  (gliding check — still this name in 26.x)
  *   - Entity#getDeltaMovement / #setDeltaMovement (velocity)

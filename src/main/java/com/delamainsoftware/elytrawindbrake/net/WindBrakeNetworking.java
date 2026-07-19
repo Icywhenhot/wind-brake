@@ -14,9 +14,9 @@ import net.minecraft.resources.Identifier;
  *   - a server that has this mod answers with {@link PresentPayload} (a vanilla server can't,
  *     so it never does), and only that answer flips {@link #serverHasMod} on.
  *
- * This branch targets 1.21.9's successor line, 26.1–26.2, which use Minecraft's
- * {@code CustomPacketPayload} codec networking. Both payloads are empty — their mere arrival
- * is the entire message — so each uses {@link StreamCodec#unit}.
+ * This branch targets Minecraft 26.2 only, which uses Minecraft's {@code CustomPacketPayload}
+ * codec networking. Both payloads are empty — their mere arrival is the entire message — so
+ * each uses {@link StreamCodec#unit}.
  *
  * 26.1+ ships UNOBFUSCATED, so this links against the real Mojang names directly. Note that
  * {@code ResourceLocation} was renamed to {@link Identifier} in this line — that rename (and
@@ -55,8 +55,7 @@ public final class WindBrakeNetworking {
         }
     }
 
-    // Identifier's constructors are private on this range, so build IDs via tryParse(String),
-    // which is stable across the whole 26.1–26.2 window.
+    // Identifier's constructors are private on 26.2, so build IDs via tryParse(String).
     private static Identifier id(String path) {
         return Identifier.tryParse("elytrawindbrake:" + path);
     }

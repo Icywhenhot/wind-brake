@@ -78,7 +78,10 @@ public class WindBrakeConfigScreen extends Screen {
     public void onClose() {
         cfg.save();
         if (this.minecraft != null) {
-            this.minecraft.setScreen(parent);
+            // 26.2 removed Minecraft#setScreen(Screen); setScreenAndShow(Screen) is the
+            // remaining public screen-setter (it both sets the field and initialises the
+            // screen). Returns to whatever screen Mod Menu handed us as the parent.
+            this.minecraft.setScreenAndShow(parent);
         }
     }
 
